@@ -4,10 +4,14 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   approvalGates,
   dailyMetrics,
+  dailyReportIndicators,
+  dailyReportMeta,
   dailyReportQuestions,
+  dailyReportSections,
   decisionRules,
   funnels,
   glossary,
+  mailAutomationRules,
   readinessProgress,
   rollups,
   sourceSummary,
@@ -45,6 +49,7 @@ function percentStyle(value: number): CSSProperties {
 export function ObserverDashboard() {
   const [activeFunnel, setActiveFunnel] = useState(funnels[0].name);
   const [sourceStatus, setSourceStatus] = useState<SourceStatus | null>(null);
+  const [copyState, setCopyState] = useState("複製日報文字");
 
   useEffect(() => {
     let mounted = true;
@@ -77,6 +82,57 @@ export function ObserverDashboard() {
     sourceStatus?.readiness ??
     readinessText.unknown;
 
+  const reportDate = useMemo(() => {
+    const baseDate = sourceStatus?.generatedAt
+      ? new Date(sourceStatus.generatedAt)
+      : new Date();
+
+    return new Intl.DateTimeFormat("zh-TW", {
+      timeZone: "Asia/Taipei",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(baseDate);
+  }, [sourceStatus?.generatedAt]);
+
+  const dailyReportText = useMemo(
+    () =>
+      [
+        "好理家在行銷與產品每日報告",
+        `產生時間：${reportDate}`,
+        `報告週期：${dailyReportMeta.period}`,
+        `今日結論：${dailyReportMeta.conclusion}`,
+        "",
+        "資料限制：",
+        dailyReportMeta.caveat,
+        "",
+        ...dailyReportSections.flatMap((section) => [
+          section.title,
+          `摘要：${section.summary}`,
+          ...section.points.map((point) => `- ${point}`),
+          ""
+        ]),
+        "自動化校準規則：",
+        ...mailAutomationRules.map((rule) => `- ${rule.title}：${rule.rule}`)
+      ].join("\n"),
+    [reportDate]
+  );
+
+  function copyDailyReport() {
+    navigator.clipboard
+      .writeText(dailyReportText)
+      .then(() => {
+        setCopyState("已複製");
+        window.setTimeout(() => setCopyState("複製日報文字"), 1600);
+      })
+      .catch(() => {
+        setCopyState("請手動選取文字");
+        window.setTimeout(() => setCopyState("複製日報文字"), 2200);
+      });
+  }
+
   return (
     <main>
       <section className="top-band">
@@ -107,6 +163,91 @@ export function ObserverDashboard() {
               <p>{question}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="surface daily-report" aria-labelledby="daily-report-title">
+        <div className="daily-report-head">
+          <div>
+            <p className="section-kicker">每日報告</p>
+            <h2 id="daily-report-title">{dailyReportMeta.title}</h2>
+            <p>{dailyReportMeta.conclusion}</p>
+          </div>
+          <div className="report-meta" aria-label="每日報告狀態">
+            <span>{dailyReportMeta.status}</span>
+            <strong>{reportDate}</strong>
+            <small>{dailyReportMeta.period}</small>
+          </div>
+        </div>
+
+        <div className="report-warning">
+          <strong>目前怎麼解讀</strong>
+          <p>{dailyReportMeta.caveat}</p>
+        </div>
+
+        <div className="report-indicators" aria-label="每日報告準備度圖表">
+          {dailyReportIndicators.map((indicator) => (
+            <div className="mini-chart" data-tone={indicator.tone} key={indicator.label}>
+              <div>
+                <strong>{indicator.label}</strong>
+                <span>{indicator.value}%</span>
+              </div>
+              <div className="bar-track">
+                <span className="bar-fill" style={percentStyle(indicator.value)} />
+              </div>
+              <p>{indicator.meaning}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="report-sections">
+          {dailyReportSections.map((section) => (
+            <article className="report-section" data-tone={section.tone} key={section.title}>
+              <div className="tile-head">
+                <p>{section.title}</p>
+                <span>{statusLabels[section.tone]}</span>
+              </div>
+              <strong>{section.summary}</strong>
+              <ul>
+                {section.points.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+
+        <div className="automation-panel">
+          <div>
+            <p className="section-kicker">接到既有 Gmail 自動化</p>
+            <h3>讓 Email 建議先被 GA4 / Ads 校準</h3>
+            <p>
+              原本自動化會讀信箱報表與建議；這次加入 GA4 / Ads 後，日報會先判斷資料是否支持建議，
+              再決定要改功能、改文案、檢查追蹤，或暫時不動廣告。
+            </p>
+          </div>
+          <div className="automation-rules">
+            {mailAutomationRules.map((rule) => (
+              <article key={rule.title}>
+                <strong>{rule.title}</strong>
+                <p>{rule.rule}</p>
+                <small>{rule.output}</small>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <div className="copy-panel">
+          <div className="copy-head">
+            <div>
+              <p className="section-kicker">可放進日報的文字</p>
+              <h3>今天先用這段做紀錄</h3>
+            </div>
+            <button onClick={copyDailyReport} type="button">
+              {copyState}
+            </button>
+          </div>
+          <pre>{dailyReportText}</pre>
         </div>
       </section>
 

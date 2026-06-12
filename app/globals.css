@@ -273,6 +273,221 @@ code {
   margin: 0;
 }
 
+.daily-report {
+  display: grid;
+  gap: 20px;
+}
+
+.daily-report-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.34fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.daily-report-head p {
+  max-width: 760px;
+  margin-bottom: 0;
+}
+
+.report-meta {
+  display: grid;
+  gap: 8px;
+  border-left: 4px solid var(--green);
+  background: var(--green-soft);
+  padding: 14px;
+}
+
+.report-meta span,
+.report-meta small {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.report-meta strong {
+  font-size: 1.1rem;
+}
+
+.report-warning {
+  border: 1px solid rgba(168, 121, 31, 0.35);
+  border-radius: 8px;
+  background: var(--amber-soft);
+  padding: 14px 16px;
+}
+
+.report-warning strong {
+  display: block;
+}
+
+.report-warning p {
+  margin: 6px 0 0;
+}
+
+.report-indicators {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mini-chart {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+}
+
+.mini-chart[data-tone="pass"] {
+  border-color: rgba(47, 125, 87, 0.45);
+}
+
+.mini-chart[data-tone="watch"] {
+  border-color: rgba(168, 121, 31, 0.45);
+}
+
+.mini-chart[data-tone="revise"],
+.mini-chart[data-tone="block"] {
+  border-color: rgba(189, 90, 66, 0.45);
+}
+
+.mini-chart > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.mini-chart span {
+  color: var(--green);
+  font-weight: 900;
+}
+
+.mini-chart[data-tone="watch"] span {
+  color: var(--amber);
+}
+
+.mini-chart p {
+  margin: 10px 0 0;
+  font-size: 0.94rem;
+}
+
+.report-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.report-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.report-section[data-tone="pass"] {
+  border-color: rgba(47, 125, 87, 0.45);
+}
+
+.report-section[data-tone="watch"] {
+  border-color: rgba(168, 121, 31, 0.45);
+}
+
+.report-section strong {
+  display: block;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.report-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.automation-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.48fr) minmax(0, 1fr);
+  gap: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+.automation-panel p {
+  margin-bottom: 0;
+}
+
+.automation-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.automation-rules article {
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+  padding: 12px 14px;
+}
+
+.automation-rules strong,
+.automation-rules small {
+  display: block;
+}
+
+.automation-rules p {
+  margin: 6px 0;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.automation-rules small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.copy-panel {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+
+.copy-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+}
+
+.copy-head button {
+  cursor: pointer;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  background: var(--green);
+  color: #fff;
+  padding: 10px 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.copy-panel pre {
+  max-height: 360px;
+  overflow: auto;
+  margin: 16px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9faf8;
+  color: var(--ink);
+  padding: 16px;
+  font-family:
+    "Noto Sans TC", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.72;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
@@ -607,6 +822,8 @@ code {
 
   .top-band,
   .answer-panel,
+  .daily-report-head,
+  .automation-panel,
   .split,
   .funnel-body,
   .two-column {
@@ -636,6 +853,9 @@ code {
   .source-grid,
   .metric-grid,
   .answer-grid,
+  .report-indicators,
+  .report-sections,
+  .automation-rules,
   .timeline,
   .glossary-grid {
     grid-template-columns: 1fr;
@@ -653,5 +873,14 @@ code {
 
   .note-band {
     grid-template-columns: 1fr;
+  }
+
+  .copy-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .copy-head button {
+    width: 100%;
   }
 }

@@ -56,6 +56,26 @@ export type GlossaryItem = {
   example: string;
 };
 
+export type DailyReportSection = {
+  title: string;
+  tone: StatusTone;
+  summary: string;
+  points: string[];
+};
+
+export type DailyReportIndicator = {
+  label: string;
+  value: number;
+  tone: StatusTone;
+  meaning: string;
+};
+
+export type MailAutomationRule = {
+  title: string;
+  rule: string;
+  output: string;
+};
+
 export const statusLabels: Record<StatusTone, string> = {
   pass: "正常",
   watch: "觀察中",
@@ -162,6 +182,109 @@ export const dailyReportQuestions = [
   "完成檢測後，有沒有人去點 Ask Ivy、諮詢或工具？",
   "廣告流量是不是帶來真正使用，而不只是點擊？",
   "今天應該修產品流程、調文案，還是先不要動？"
+];
+
+export const dailyReportMeta = {
+  title: "今日每日報告",
+  status: "偵查台狀態報告",
+  period: "每日 00:00-23:59（Asia/Taipei）",
+  conclusion:
+    "目前最重要的不是調整廣告，而是確認正式站事件穩定入帳，並讓 GA4/Ads 變成 Email 報表建議的校準來源。",
+  caveat:
+    "尚未接入 GA4 / Ads 只讀 API，所以這份日報先呈現偵查台狀態、應檢查項目與決策規則；接上 API 後才會替換成真實成效數字。"
+};
+
+export const dailyReportIndicators: DailyReportIndicator[] = [
+  {
+    label: "網站事件基礎",
+    value: 85,
+    tone: "pass",
+    meaning: "正式站已可送出多個行為事件，足以開始做入帳觀察。"
+  },
+  {
+    label: "GA4 漏斗可讀性",
+    value: 70,
+    tone: "pass",
+    meaning: "已具備檢測、工具、諮詢等漏斗的事件基礎，仍需累積正式站樣本。"
+  },
+  {
+    label: "Ads 成效校準",
+    value: 35,
+    tone: "watch",
+    meaning: "目前能保留 NT$500 預算守門規則，但尚未能自動讀取每日廣告品質。"
+  },
+  {
+    label: "自動日報取數",
+    value: 25,
+    tone: "watch",
+    meaning: "日報格式已就位，下一步是接 GA4 Data API 與 Ads 只讀資料。"
+  }
+];
+
+export const dailyReportSections: DailyReportSection[] = [
+  {
+    title: "今日結論",
+    tone: "watch",
+    summary: "今天先把資料可信度補齊，再決定要不要改產品或廣告。",
+    points: [
+      "事件已經有基礎，但尚未接自動取數，所以不能把這頁當成即時績效儀表板。",
+      "目前建議先看 GA4 Realtime / DebugView 是否穩定收到正式站事件。",
+      "Ads 維持每日 NT$500 上限，不因尚未驗證的事件而提高預算。"
+    ]
+  },
+  {
+    title: "資料源狀態",
+    tone: "watch",
+    summary: "可以開始觀察，但真實趨勢仍需要只讀 API 或匯出資料接入。",
+    points: [
+      "GA4：用來看使用者有沒有開始、完成、看到結果與點下一步。",
+      "GTM：用來管理標籤與觸發規則，正式站容器仍需要確認與分流。",
+      "Ads：目前只做成效校準，不做預算、投放、轉換匯入調整。"
+    ]
+  },
+  {
+    title: "漏斗觀察",
+    tone: "pass",
+    summary: "日報會把流量拆成開始前、作答中、結果頁後三段判斷。",
+    points: [
+      "開始前流失：有 landing_view，沒有 start_assessment 或 tool_start。",
+      "作答中流失：有 step_view / step_answer，但沒有 complete_assessment。",
+      "結果後承接：有 view_assessment_result，再看是否有 CTA、Ask Ivy、諮詢或工具事件。"
+    ]
+  },
+  {
+    title: "今天建議動作",
+    tone: "pass",
+    summary: "先做可驗證的小步驟，不直接動 Ads。",
+    points: [
+      "把 GA4/Ads 的每日觀察加入既有 Gmail 報表自動化，讓外部建議先被數據校準。",
+      "若 GA4 顯示高流量低開始率，優先檢查 landing CTA、文案與手機版入口。",
+      "若 GA4 顯示開始後中途離開，優先檢查題目頁 UX、載入、上一題/下一題流程。"
+    ]
+  }
+];
+
+export const mailAutomationRules: MailAutomationRule[] = [
+  {
+    title: "來源優先順序",
+    rule: "先看 GA4 / Ads / FamilyFin 後台或偵查台狀態，再讀 Gmail 報表。",
+    output: "避免 Email 建議看起來合理，但其實和當天流量或漏斗不一致。"
+  },
+  {
+    title: "證據標記",
+    rule: "每張建議卡都要標示 GA4/Ads 支持、GA4/Ads 反證、Email only、資料不足。",
+    output: "Kevin 可以知道哪些建議值得執行，哪些只是候選想法。"
+  },
+  {
+    title: "廣告守門",
+    rule: "Ads 調整必須有 GA4/GTM/Ads 證據，預算維持每日 NT$500 上限。",
+    output: "避免在轉換未驗證時放大花費；必要時先改功能、流程或文案。"
+  },
+  {
+    title: "資料不足處理",
+    rule: "如果 GA4/Ads 尚未讀到資料，要明確寫成資料缺口，不把缺口當成沒有問題。",
+    output: "日報會保留 blocker，下一次自動化可以接著補驗，而不是重頭猜。"
+  }
 ];
 
 export const funnels: Funnel[] = [
