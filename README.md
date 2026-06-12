@@ -22,7 +22,7 @@ https://familyfin-growth-observer.vercel.app
 - 接著看四個日報段落：今日結論、資料源狀態、漏斗觀察、今天建議動作。
 - 需要放進其他日報時，可以直接使用畫面上的「可放進日報的文字」。
 
-目前這份日報仍是偵查台狀態報告，不是真實績效日報；接上 GA4 Data API 與 Ads 只讀資料後，才會顯示正式數字。
+目前偵查台已具備 GA4 / Ads 只讀 adapter。若 Vercel 尚未設定憑證，畫面會顯示缺少哪些環境變數；設定完成後，日報會顯示近 7 天 GA4 與 Ads 彙總數字。
 
 ## Gmail 報表自動化校準規則
 
@@ -35,8 +35,7 @@ https://familyfin-growth-observer.vercel.app
 
 ## 目前還沒有做什麼
 
-- 尚未讀取 GA4 真實資料。
-- 尚未讀取 Google Ads 真實資料。
+- 尚未把真實 Google API 憑證提交到 repo；正式資料需由 Vercel 環境變數提供。
 - 尚未匯入任何 Ads 轉換。
 - 尚未修改 GTM、GA4、Ads 或好理家在網站。
 - 尚未保存任何使用者資料。
@@ -49,7 +48,7 @@ https://familyfin-growth-observer.vercel.app
 
 ## 後續要接的資料
 
-未來如果要顯示真實數字，需要在 Vercel 設定只讀環境變數。
+若要顯示真實數字，需要在 Vercel 設定只讀環境變數。
 
 可能會用到：
 
@@ -57,9 +56,46 @@ https://familyfin-growth-observer.vercel.app
 - `GA4_MEASUREMENT_ID`
 - `GOOGLE_ADS_CUSTOMER_ID`
 - `GOOGLE_ADS_LOGIN_CUSTOMER_ID`
+- `GOOGLE_ADS_DEVELOPER_TOKEN`
+- `GOOGLE_ADS_API_VERSION`
 - `GOOGLE_APPLICATION_CREDENTIALS` 或 `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 
 請不要把真實密鑰放進 repo。
+
+## GA4 只讀接法
+
+偵查台會使用 Google Analytics Data API 的 `runReport` 讀取彙總資料。
+
+需要準備：
+
+- 啟用 Google Analytics Data API。
+- 建立 Google service account。
+- 在 GA4 property 中把 service account 加成可讀權限。
+- 設定 `GA4_PROPERTY_ID`。
+- 設定 `GOOGLE_APPLICATION_CREDENTIALS_JSON`，可用原始 JSON 或 base64 JSON。
+
+讀取內容：
+
+- 近 7 天活躍使用者、工作階段、事件數。
+- 昨天活躍使用者、工作階段、事件數。
+- 好理家在已布置的關鍵事件近 7 天次數。
+
+## Google Ads 只讀接法
+
+偵查台會使用 Google Ads API 的 REST `searchStream` 讀取彙總資料。
+
+需要準備：
+
+- Google Ads developer token。
+- 目標 Ads customer ID，不能有連字號。
+- 如果透過 manager account 管理，設定 `GOOGLE_ADS_LOGIN_CUSTOMER_ID`，也不能有連字號。
+- 讓 service account 取得 Google Ads 帳戶的可讀權限。
+- 預設 API 版本是 `v24`，可用 `GOOGLE_ADS_API_VERSION` 調整。
+
+讀取內容：
+
+- 近 7 天曝光、點擊、CTR、花費、轉換。
+- 只讀彙總資料，不會修改預算、出價、關鍵字、素材、轉換或活動狀態。
 
 ## 安全規則
 

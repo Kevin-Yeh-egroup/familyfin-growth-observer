@@ -114,7 +114,7 @@ export const sourceSummary: SourceCard[] = [
     tone: "pass",
     plainMeaning: "這個儀表板只顯示與整理，不會改 GA4、GTM、Ads 或網站。",
     technicalName: "模式：read-only observer",
-    detail: "目前也沒有放任何 GA4 或 Ads 密鑰。"
+    detail: "repo 不保存任何密鑰；正式只讀憑證需透過 Vercel 環境變數提供。"
   }
 ];
 
@@ -486,5 +486,5 @@ export const approvalGates = [
   "把 GA4 事件匯入 Ads 當轉換",
   "調整 Ads 預算、出價、關鍵字、素材或活動狀態",
   "移除這個偵查台的 noindex",
-  "接入 GA4 或 Ads 的正式讀取憑證"
+  "新增、替換或外流 GA4 / Ads 正式讀取憑證"
 ];

@@ -26,11 +26,61 @@ type SourceStatus = {
   noExternalWrites: boolean;
   sources: Record<string, boolean>;
   readiness: string;
+  ga4?: {
+    status: "connected" | "missing_config" | "error";
+    label: string;
+    message: string;
+    propertyId?: string;
+    measurementId?: string;
+    checkedAt: string;
+    missing: string[];
+    errorCode?: string;
+    totals?: {
+      activeUsers: number;
+      sessions: number;
+      eventCount: number;
+    };
+    yesterday?: {
+      activeUsers: number;
+      sessions: number;
+      eventCount: number;
+    };
+    keyEvents?: Record<string, number>;
+    topEvents?: Array<{
+      eventName: string;
+      eventCount: number;
+    }>;
+  };
+  ads?: {
+    status: "connected" | "missing_config" | "error";
+    label: string;
+    message: string;
+    checkedAt: string;
+    customerId?: string;
+    loginCustomerId?: string;
+    apiVersion: string;
+    missing: string[];
+    errorCode?: string;
+    currencyCode?: string;
+    totals?: {
+      impressions: number;
+      clicks: number;
+      costMicros: number;
+      cost: number;
+      conversions: number;
+      ctr: number;
+    };
+  };
+  missing?: string[];
 };
 
 const readinessText: Record<string, string> = {
   draft_no_live_api_credentials: "尚未接正式資料源",
   ready_for_read_only_ga4_adapter: "可接 GA4 只讀資料",
+  live_read_only_sources_connected: "GA4 / Ads 已接只讀資料",
+  ga4_connected_ads_pending: "GA4 已接上，Ads 待補設定",
+  ads_connected_ga4_pending: "Ads 已接上，GA4 待補設定",
+  read_only_adapter_configured_with_errors: "只讀資料源讀取錯誤",
   checking_source_status: "正在確認",
   unknown: "狀態未知"
 };
@@ -44,6 +94,38 @@ const toneDescriptions: Record<StatusTone, string> = {
 
 function percentStyle(value: number): CSSProperties {
   return { "--bar-value": `${value}%` } as CSSProperties;
+}
+
+function formatNumber(value: number | undefined) {
+  return new Intl.NumberFormat("zh-TW").format(value ?? 0);
+}
+
+function formatPercent(value: number | undefined) {
+  return `${(((value ?? 0) * 100)).toFixed(2)}%`;
+}
+
+function formatCurrency(value: number | undefined, currencyCode?: string) {
+  try {
+    return new Intl.NumberFormat("zh-TW", {
+      style: "currency",
+      currency: currencyCode ?? "TWD",
+      maximumFractionDigits: 0
+    }).format(value ?? 0);
+  } catch {
+    return `${formatNumber(value)} ${currencyCode ?? ""}`.trim();
+  }
+}
+
+function statusTone(status: string | undefined): StatusTone {
+  if (status === "connected") {
+    return "pass";
+  }
+
+  if (status === "error") {
+    return "revise";
+  }
+
+  return "watch";
 }
 
 export function ObserverDashboard() {
@@ -81,6 +163,12 @@ export function ObserverDashboard() {
     readinessText[sourceStatus?.readiness ?? "checking_source_status"] ??
     sourceStatus?.readiness ??
     readinessText.unknown;
+  const ga4 = sourceStatus?.ga4;
+  const ads = sourceStatus?.ads;
+  const hasAnyLiveSource = ga4?.status === "connected" || ads?.status === "connected";
+  const sourceCaveat = hasAnyLiveSource
+    ? "已接入至少一個只讀資料源。下方數字來自 API 彙總資料，只用來做趨勢判斷，不含個人資料，也不會修改 GA4、GTM 或 Ads。"
+    : dailyReportMeta.caveat;
 
   const reportDate = useMemo(() => {
     const baseDate = sourceStatus?.generatedAt
@@ -106,7 +194,21 @@ export function ObserverDashboard() {
         `今日結論：${dailyReportMeta.conclusion}`,
         "",
         "資料限制：",
-        dailyReportMeta.caveat,
+        sourceCaveat,
+        "",
+        "資料源入帳狀態：",
+        `GA4：${ga4?.label ?? "尚未檢查"}`,
+        `Ads：${ads?.label ?? "尚未檢查"}`,
+        ...(ga4?.totals
+          ? [
+              `GA4 近 7 天：活躍使用者 ${formatNumber(ga4.totals.activeUsers)}、工作階段 ${formatNumber(ga4.totals.sessions)}、事件 ${formatNumber(ga4.totals.eventCount)}。`
+            ]
+          : []),
+        ...(ads?.totals
+          ? [
+              `Ads 近 7 天：曝光 ${formatNumber(ads.totals.impressions)}、點擊 ${formatNumber(ads.totals.clicks)}、花費 ${formatCurrency(ads.totals.cost, ads.currencyCode)}、轉換 ${formatNumber(ads.totals.conversions)}。`
+            ]
+          : []),
         "",
         ...dailyReportSections.flatMap((section) => [
           section.title,
@@ -117,7 +219,7 @@ export function ObserverDashboard() {
         "自動化校準規則：",
         ...mailAutomationRules.map((rule) => `- ${rule.title}：${rule.rule}`)
       ].join("\n"),
-    [reportDate]
+    [ads, ga4, reportDate, sourceCaveat]
   );
 
   function copyDailyReport() {
@@ -182,7 +284,90 @@ export function ObserverDashboard() {
 
         <div className="report-warning">
           <strong>目前怎麼解讀</strong>
-          <p>{dailyReportMeta.caveat}</p>
+          <p>{sourceCaveat}</p>
+        </div>
+
+        <div className="live-source-grid" aria-label="GA4 與 Ads 只讀資料源">
+          <article data-tone={statusTone(ga4?.status)}>
+            <div className="tile-head">
+              <p>GA4 只讀資料</p>
+              <span>{ga4?.label ?? "尚未檢查"}</span>
+            </div>
+            <p>{ga4?.message ?? "正在等待 API 狀態。"}</p>
+            {ga4?.totals ? (
+              <div className="live-metrics">
+                <div>
+                  <span>近 7 天活躍使用者</span>
+                  <strong>{formatNumber(ga4.totals.activeUsers)}</strong>
+                </div>
+                <div>
+                  <span>近 7 天工作階段</span>
+                  <strong>{formatNumber(ga4.totals.sessions)}</strong>
+                </div>
+                <div>
+                  <span>近 7 天事件數</span>
+                  <strong>{formatNumber(ga4.totals.eventCount)}</strong>
+                </div>
+                <div>
+                  <span>昨天事件數</span>
+                  <strong>{formatNumber(ga4.yesterday?.eventCount)}</strong>
+                </div>
+              </div>
+            ) : (
+              <ul className="missing-list">
+                {(ga4?.missing?.length ? ga4.missing : ["等待 GA4 只讀設定"]).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+            {ga4?.keyEvents && (
+              <details>
+                <summary>關鍵事件近 7 天</summary>
+                <div className="event-pill-grid">
+                  {Object.entries(ga4.keyEvents).map(([eventName, count]) => (
+                    <span key={eventName}>
+                      <code>{eventName}</code>
+                      {formatNumber(count)}
+                    </span>
+                  ))}
+                </div>
+              </details>
+            )}
+          </article>
+
+          <article data-tone={statusTone(ads?.status)}>
+            <div className="tile-head">
+              <p>Ads 只讀資料</p>
+              <span>{ads?.label ?? "尚未檢查"}</span>
+            </div>
+            <p>{ads?.message ?? "正在等待 API 狀態。"}</p>
+            {ads?.totals ? (
+              <div className="live-metrics">
+                <div>
+                  <span>近 7 天曝光</span>
+                  <strong>{formatNumber(ads.totals.impressions)}</strong>
+                </div>
+                <div>
+                  <span>近 7 天點擊</span>
+                  <strong>{formatNumber(ads.totals.clicks)}</strong>
+                </div>
+                <div>
+                  <span>近 7 天 CTR</span>
+                  <strong>{formatPercent(ads.totals.ctr)}</strong>
+                </div>
+                <div>
+                  <span>近 7 天花費</span>
+                  <strong>{formatCurrency(ads.totals.cost, ads.currencyCode)}</strong>
+                </div>
+              </div>
+            ) : (
+              <ul className="missing-list">
+                {(ads?.missing?.length ? ads.missing : ["等待 Ads 只讀設定"]).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </article>
         </div>
 
         <div className="report-indicators" aria-label="每日報告準備度圖表">
@@ -279,8 +464,9 @@ export function ObserverDashboard() {
           <p className="section-kicker">資料源狀態</p>
           <h2>{readiness}</h2>
           <p>
-            目前這個偵查台已經可以公開查看，但還沒有接入 GA4 或 Ads 的只讀資料。
-            所以下方圖表是「報表結構與觀察順序」，不是即時成效數字。
+            {hasAnyLiveSource
+              ? "目前這個偵查台已開始讀取只讀資料源。若只接上其中一個來源，日報會標示另一個資料缺口。"
+              : "目前這個偵查台已經可以公開查看，但還沒有接入 GA4 或 Ads 的只讀資料。所以下方圖表是「報表結構與觀察順序」，不是即時成效數字。"}
           </p>
         </div>
         <dl className="status-list">
@@ -294,7 +480,11 @@ export function ObserverDashboard() {
           </div>
           <div>
             <dt>下一步</dt>
-            <dd>接 GA4 Data API 只讀資料後，才顯示真實趨勢。</dd>
+            <dd>
+              {sourceStatus?.missing?.length
+                ? `待補：${sourceStatus.missing.join("、")}`
+                : "GA4 / Ads 只讀資料已可供日報判斷。"}
+            </dd>
           </div>
         </dl>
       </section>

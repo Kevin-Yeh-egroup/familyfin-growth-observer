@@ -278,6 +278,13 @@ code {
   gap: 20px;
 }
 
+.daily-report *,
+.split *,
+.source-grid *,
+.metric-grid * {
+  min-width: 0;
+}
+
 .daily-report-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.34fr);
@@ -322,6 +329,105 @@ code {
 
 .report-warning p {
   margin: 6px 0 0;
+}
+
+.live-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.live-source-grid article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.live-source-grid article[data-tone="pass"] {
+  border-color: rgba(47, 125, 87, 0.45);
+}
+
+.live-source-grid article[data-tone="watch"] {
+  border-color: rgba(168, 121, 31, 0.45);
+}
+
+.live-source-grid article[data-tone="revise"],
+.live-source-grid article[data-tone="block"] {
+  border-color: rgba(189, 90, 66, 0.45);
+}
+
+.live-source-grid article > p {
+  margin: 12px 0 0;
+}
+
+.live-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.live-metrics div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9faf8;
+  padding: 12px;
+}
+
+.live-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.live-metrics strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.28rem;
+  line-height: 1.25;
+}
+
+.missing-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.missing-list li,
+.report-section li,
+.live-source-grid p,
+.report-warning p {
+  overflow-wrap: anywhere;
+}
+
+.event-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.event-pill-grid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f9faf8;
+  padding: 6px 10px;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.event-pill-grid code {
+  margin-top: 0;
 }
 
 .report-indicators {
@@ -853,6 +959,7 @@ code {
   .source-grid,
   .metric-grid,
   .answer-grid,
+  .live-source-grid,
   .report-indicators,
   .report-sections,
   .automation-rules,
@@ -882,5 +989,9 @@ code {
 
   .copy-head button {
     width: 100%;
+  }
+
+  .live-metrics {
+    grid-template-columns: 1fr;
   }
 }
