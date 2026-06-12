@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FamilyFin Growth Observer",
-  description: "Read-only GA4, GTM, and Ads observation dashboard for FamilyFin.",
+  title: "好理家在網站偵查台",
+  description: "好理家在 GA4、GTM、Ads 只讀偵查與日報儀表板。",
   robots: {
     index: false,
     follow: false,
